@@ -1,0 +1,31 @@
+Operations to perform:
+  Apply all migrations: accounts, admin, applications, auth, contenttypes, jobs, sessions
+Running migrations:
+  Applying accounts.0005_roles_useremailverification_userotp_usersession_and_more...Traceback (most recent call last):
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\manage.py", line 22, in <module>
+    main()
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\base.py", line 412, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\base.py", line 458, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\base.py", line 106, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\core\management\commands\migrate.py", line 356, in handle
+    post_migrate_state = executor.migrate(
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\db\migrations\executor.py", line 135, in migrate
+    state = self._migrate_all_forwards(
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\db\migrations\executor.py", line 167, in _migrate_all_forwards
+    state = self.apply_migration(
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\db\migrations\executor.py", line 255, in apply_migration
+    migration_recorded = True
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\db\backends\sqlite3\schema.py", line 40, in __exit__
+    self.connection.check_constraints()
+  File "C:\Users\thaku\OneDrive\Desktop\JobPortal\venv\lib\site-packages\django\db\backends\sqlite3\base.py", line 275, in check_constraints
+    raise IntegrityError(
+django.db.utils.IntegrityError: The row in table 'jobs_job' with primary key '1' has an invalid foreign key: jobs_job.recruiter_id contains a value '1' that does not have a corresponding value in accounts_recruiter.id.
