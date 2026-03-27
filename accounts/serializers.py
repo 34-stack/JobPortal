@@ -1,9 +1,15 @@
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 
-from .models import ADMIN, CANDIDATE, RECRUITER, Candidate, Recruiter
+from .models import ADMIN, CANDIDATE, RECRUITER, Candidate, Recruiter, WorkDetails
 
 User = get_user_model()
+
+class WorkDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkDetails
+        fields = ["id", "company_name", "designation", "start_date", "end_date", "currently_working", "is_active"]
+        read_only_fields = ["id"]
 
 
 class UserSerializer(serializers.ModelSerializer):
