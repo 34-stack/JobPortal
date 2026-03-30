@@ -11,38 +11,24 @@ from applications.serializers import ApplicationSerializer
 from .permissions import IsOwnerOrReadOnly, IsRecruiterOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from .filters import JobFilter
 
 
 class JobViewSet(viewsets.ModelViewSet):
-    """
-    Handles all job operations:
-      list           → GET    /api/jobs/
-      create         → POST   /api/jobs/
-      retrieve       → GET    /api/jobs/<pk>/
-      update         → PUT    /api/jobs/<pk>/
-      partial_update → PATCH  /api/jobs/<pk>/
-      destroy        → DELETE /api/jobs/<pk>/
-    """
+    
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['location', 'job_type', 'recruiter']  # ?location=mumbai
-    search_fields = ['title', 'description']                  # ?search=keyword
-    ordering_fields = ['posted_at', 'title']                  # ?ordering=posted_at
+    filterset_class = JobFilter
+    search_fields = ['title', 'description','recruiter__organisation_name']                 
+    ordering_fields = ['posted_at', 'title','salary']                 
 
     def get_permissions(self):
-        """
-        list/retrieve → anyone can view (no auth needed)
-        create        → must be a recruiter
-        update/delete → must be a recruiter AND the owner of that job
-        """
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsRecruiterOrReadOnly(), IsOwnerOrReadOnly()]
         return [IsRecruiterOrReadOnly()]
 
     def perform_create(self, serializer):
-        # Prevents invalid users from creating jobs.
-        # Checks if the user is a recruiter and assigns the job to them.
         recruiter = get_object_or_404(Recruiter, user=self.request.user)
         serializer.save(recruiter=recruiter)
 
@@ -56,7 +42,6 @@ class JobViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def applicants(self, request, pk=None):
-        """GET /api/jobs/<pk>/applicants/ - Recruiter only"""
         job = self.get_object()
         if request.user.role != 'RECRUITER':
             return Response({"error": "Unauthorized"}, status=403)

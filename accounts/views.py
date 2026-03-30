@@ -11,15 +11,29 @@ from .serializers import (
     RecruiterSerializer,
     RegisterSerializer,
     UserSerializer,
+    workDetailsSerialiser,
 )
 from applications.models import Application
 from jobs.models import Job
 
+class workExperienceViewSet(viewsets.ModelViewSet):
 
+    serializer_class = workDetailsSerialiser
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        #only logged-in user ka work experience dikhe
+        return self.request.user.work_experience.all()
+    
+    def perform_create(self, serializer):
+
+        work_record = serializer.save()
+
+        self.request.user.work_experience.add(work_record)
 class AuthViewSet(viewsets.ViewSet):
     """Handles user registration and login. No authentication required."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     @action(detail=False, methods=['post'])
     def register(self, request):
@@ -111,7 +125,11 @@ class RecruiterViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get', 'put', 'patch', 'delete'])
     def me(self, request):
         """GET/PUT/PATCH/DELETE /api/accounts/recruiter/me/ — Manage own recruiter profile."""
-        recruiter = get_object_or_404(Recruiter, user=request.user)
+        recruiter = get_object_or_404(Recruiter, id=request.user.id)
+        
+        # Safe check: allow superusers or check role code
+        if not request.user.is_superuser and (not request.user.role or request.user.role.code != "RECRUITER"):
+            return Response({"detail": "Only recruiters can access this profile."}, status=status.HTTP_403_FORBIDDEN)
 
         if request.method == 'GET':
             return Response(RecruiterSerializer(recruiter, context={"request": request}).data)
@@ -151,7 +169,11 @@ class CandidateViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get', 'put', 'patch', 'delete'])
     def me(self, request):
         """GET/PUT/PATCH/DELETE /api/accounts/candidate/me/ — Manage own candidate profile."""
-        candidate = get_object_or_404(Candidate, user=request.user)
+        candidate = get_object_or_404(Candidate, id=request.user.id)
+        
+        # Safe check: allow superusers or check role code
+        if not request.user.is_superuser and (not request.user.role or request.user.role.code != "CANDIDATE"):
+            return Response({"detail": "Only candidates can access this profile."}, status=status.HTTP_403_FORBIDDEN)
 
         if request.method == 'GET':
             return Response(CandidateSerializer(candidate, context={"request": request}).data)
