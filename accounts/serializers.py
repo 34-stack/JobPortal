@@ -5,7 +5,7 @@ from .models import ADMIN, CANDIDATE, RECRUITER, Candidate, Recruiter, WorkDetai
 
 User = get_user_model()
 
-class WorkDetailsSerializer(serializers.ModelSerializer):
+class workDetailsSerialiser(serializers.ModelSerializer):
     class Meta:
         model = WorkDetails
         fields = ["id", "company_name", "designation", "start_date", "end_date", "currently_working", "is_active"]
@@ -23,8 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_email_verified",
             "is_active",
-            "phone",
-            "profile_picture",
+            "mobile",
+            "image",
             "date_joined",
         ]
         read_only_fields = ["id", "is_email_verified", "is_active", "date_joined"]
@@ -41,8 +41,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "role",
-            "phone",
-            "profile_picture",
+            "mobile",
+            "image",
         ]
 
     def validate_email(self, value):
@@ -61,55 +61,49 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
-
-        # Create role-specific profile
-        if user.role == RECRUITER:
-            Recruiter.objects.create(user=user)
-        elif user.role == CANDIDATE:
-            Candidate.objects.create(user=user)
-
         return user
 
 
 class RecruiterSerializer(serializers.ModelSerializer):
+    company_name = serializers.CharField(source='organisation_name', required=False, allow_blank=True, allow_null=True)
+
     class Meta:
         model = Recruiter
-        fields = ["id", "user", "company_name", "company_website", "company_description"]
-        read_only_fields = ["id", "user"]
+        fields = ["id", "company_name"]
+        read_only_fields = ["id"]
 
     def validate(self, attrs):
         user = (
-            attrs.get("user")
-            or getattr(self.instance, "user", None)
+            self.instance
             or getattr(self.context.get("request"), "user", None)
         )
         if not user:
-            raise serializers.ValidationError({"user": "User is required."})
-        if user.role != RECRUITER:
-            raise serializers.ValidationError({"user": "Only recruiter users can have recruiter data."})
-        if hasattr(user, "candidate"):
-            raise serializers.ValidationError({"user": "This user is already a candidate."})
+            raise serializers.ValidationError({"detail": "User context is required."})
+        if user.role and user.role.code != "RECRUITER":
+             raise serializers.ValidationError({"detail": "User does not have Recruiter role."})
         return attrs
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    work_experience = workDetailsSerialiser(many=True, read_only=True)
+    resume = serializers.FileField(source='cv', required=False, allow_null=True)
+    experience_years = serializers.IntegerField(source='experience_yrs', required=False, allow_null=True)
+
     class Meta:
         model = Candidate
-        fields = ["id", "user", "resume", "skills", "experience_years"]
-        read_only_fields = ["id", "user"]
+        fields = ["id", "resume", "experience_years", "work_experience", "work_details", "bio", "linkedin", "gender", "age", "current_ctc", "expected_ctc"]
+        read_only_fields = ["id", "work_experience"]
 
     def validate(self, attrs):
         user = (
-            attrs.get("user")
-            or getattr(self.instance, "user", None)
+            self.instance
             or getattr(self.context.get("request"), "user", None)
         )
         if not user:
-            raise serializers.ValidationError({"user": "User is required."})
-        if user.role != CANDIDATE:
-            raise serializers.ValidationError({"user": "Only candidate users can have candidate data."})
-        if hasattr(user, "recruiter"):
-            raise serializers.ValidationError({"user": "This user is already a recruiter."})
+            raise serializers.ValidationError({"detail": "User context is required."})
+        # If user is a proxy/User, check the role field
+        if user.role and user.role.code != "CANDIDATE":
+             raise serializers.ValidationError({"detail": "User does not have Candidate role."})
         return attrs
 
 

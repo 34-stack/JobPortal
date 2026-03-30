@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager, UserManage
 
 from django.db import models
 from base.models import TimeStampedModel
+from base.validators import validate_resume_extension, validate_file_size
 
 CANDIDATE = "CANDIDATE"
 RECRUITER = "RECRUITER"
@@ -56,33 +57,30 @@ class User(AbstractUser, TimeStampedModel):
     mobile = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(max_length=255, null=True, blank=True, unique=True)
     image = models.CharField(max_length=1024, blank=True, null=True)
-    # location = models.ForeignKey('web_app.Location', on_delete=models.SET_NULL, blank=True, null=True, related_name='candidate_location')
     age = models.PositiveIntegerField(blank=True, null=True)
     gender = models.CharField(max_length=10,choices=GENDER_CHOICES,blank=True, null=True)
     experience_yrs = models.IntegerField(blank=True, null=True)
     experience_month = models.IntegerField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
-    cv = models.CharField(max_length=1024, blank=True, null=True)
+    cv = models.FileField(upload_to='resumes/', blank=True, null=True, validators = [validate_resume_extension, validate_file_size])
     current_ctc = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     expected_ctc = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    # skills = models.ManyToManyField('web_app.Skills', blank=True, related_name='candidate_skills')
-    # additional_skills = models.ManyToManyField('web_app.Skills', blank=True, related_name='candidate_additional_skills')
-    # job_function = models.ForeignKey('web_app.JobFunction', on_delete=models.SET_NULL, blank=True, null=True)
     work_experience = models.ManyToManyField(WorkDetails, blank=True, related_name='users_work_experience')
+
+
     date_range = models.CharField(max_length=255, blank=True, null=True)
     # Employer-specific fields
     organisation_name = models.CharField(max_length=255, blank=True, null=True)
-    # industry = models.ForeignKey('web_app.Industry', on_delete=models.SET_NULL, blank=True, null=True)
-    # company_type = models.ForeignKey('web_app.CompanyType', on_delete=models.SET_NULL, blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
     date_joined = models.DateField(blank=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     objects = CustomUserManager()
-    # role is already defined above, so removing the ManyToManyField or renaming to roles_m2m. actually let's just use roles, but `roles` is the class name. Let's fix it to use the class roles.
     roles_list = models.ManyToManyField(roles, related_name='users_roles_list')
-    # Email address to be used as the username
+
+
+    # Email address =  the username
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'mobile']
     class Meta:
