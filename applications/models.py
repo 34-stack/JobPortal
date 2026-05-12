@@ -4,7 +4,7 @@ from base.validators import validate_resume_extension, validate_file_size
 # Create your models here.
 class Application(models.Model):
     job=models.ForeignKey('jobs.job',on_delete=models.CASCADE)
-    candidate= models.ForeignKey('accounts.Candidate',on_delete=models.CASCADE)
+    candidate= models.ForeignKey('accounts.User',on_delete=models.CASCADE)
     cover_letter=models.TextField(blank=True)
     resume=models.FileField(upload_to='resumes/', blank=True, null=True, validators = [validate_resume_extension, validate_file_size])
     applied_at=models.DateTimeField(auto_now_add=True)
@@ -14,4 +14,4 @@ class Application(models.Model):
         ordering = ['-applied_at']
         unique_together = [("job", "candidate")]
     def __str__(self):
-        return f"Application by {self.candidate.user.email} for {self.job.title}"
+        return f"Application by {self.candidate.email} for {self.job.title}"
